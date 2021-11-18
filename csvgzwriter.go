@@ -22,13 +22,16 @@ type SqlRows interface {
 	Next() bool
 }
 
-func New(output io.WriteCloser) (*CsvGzWriter, error) {
+func New(output io.WriteCloser, comma ...rune) (*CsvGzWriter, error) {
 	c := CsvGzWriter{}
 	c.TotalRows = 0
 	c.FirstRow = nil
 	c.LastRow = nil
 	c.gzipWriter = gzip.NewWriter(output)
 	c.csvWriter = csv.NewWriter(c.gzipWriter)
+	if len(comma) == 1 {
+		c.csvWriter.Comma = comma[0]
+	}
 	c.CsvWriter = csvutil.NewEncoder(c.csvWriter)
 	c.OutputWriter = output
 	return &c, nil
@@ -71,19 +74,6 @@ func (c *CsvGzWriter) MarshalStuctSlice(a interface{}) (err error) {
 	err = c.CsvWriter.Encode(v)
 	c.Flush()
 	return
-}
-
-func (c *CsvGzWriter) MarshalRows(rows SqlRows, v interface{}, scanRow func(SqlRows, interface{}) error) error {
-	for rows.Next() {
-		if err := scanRow(rows, v); err != nil {
-			return err
-		}
-		if err := c.MarshalStuct(v); err != nil {
-			return err
-		}
-	}
-	c.Flush()
-	return nil
 }
 
 func (c *CsvGzWriter) Flush() {
