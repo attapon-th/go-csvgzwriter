@@ -2,7 +2,6 @@ package csvgz
 
 import (
 	"compress/gzip"
-	"database/sql"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -19,6 +18,9 @@ type CsvGzWriter struct {
 	csvWriter    *csv.Writer
 	gzipWriter   *gzip.Writer
 }
+type SqlRows interface {
+	Next() bool
+}
 
 func New(output io.WriteCloser) (*CsvGzWriter, error) {
 	c := CsvGzWriter{}
@@ -31,9 +33,18 @@ func New(output io.WriteCloser) (*CsvGzWriter, error) {
 	c.OutputWriter = output
 	return &c, nil
 }
-func (c *CsvGzWriter) Header(v interface{}) (err error) {
+func (c *CsvGzWriter) Header(header []string) (err error) {
 	c.CsvWriter.AutoHeader = false
-	return c.CsvWriter.EncodeHeader(v)
+	return c.csvWriter.Write(header)
+}
+
+func (c *CsvGzWriter) HeaderWithStruct(v interface{}, tag string) (err error) {
+	c.CsvWriter.AutoHeader = false
+	s, err := csvutil.Header(v, tag)
+	if err != nil {
+		return err
+	}
+	return c.csvWriter.Write(s)
 }
 func (c *CsvGzWriter) MarshalStuct(v interface{}) (err error) {
 	if c.FirstRow == nil {
@@ -62,12 +73,12 @@ func (c *CsvGzWriter) MarshalStuctSlice(a interface{}) (err error) {
 	return
 }
 
-func (c *CsvGzWriter) MarshalRows(rows *sql.Rows, v *interface{}, scanRows func(*sql.Rows, interface{}) error) error {
+func (c *CsvGzWriter) MarshalRows(rows SqlRows, v interface{}, scanRow func(SqlRows, interface{}) error) error {
 	for rows.Next() {
-		if err := scanRows(rows, v); err != nil {
+		if err := scanRow(rows, v); err != nil {
 			return err
 		}
-		if err := c.MarshalStuct(*v); err != nil {
+		if err := c.MarshalStuct(v); err != nil {
 			return err
 		}
 	}
