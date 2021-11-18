@@ -28,8 +28,8 @@ func New(output io.WriteCloser) (*CsvGzWriter, error) {
 	c.FirstRow = nil
 	c.LastRow = nil
 	c.gzipWriter = gzip.NewWriter(output)
-	csvW := csv.NewWriter(c.gzipWriter)
-	c.CsvWriter = csvutil.NewEncoder(csvW)
+	c.csvWriter = csv.NewWriter(c.gzipWriter)
+	c.CsvWriter = csvutil.NewEncoder(c.csvWriter)
 	c.OutputWriter = output
 	return &c, nil
 }
