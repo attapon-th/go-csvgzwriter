@@ -1,6 +1,6 @@
 # GO CSV GZip Writer
 
-## Referent form
+## Reference
 
 > [`github.com/jszwec/csvutil`](https://github.com/jszwec/csvutil)
 
