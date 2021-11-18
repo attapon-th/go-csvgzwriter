@@ -15,10 +15,10 @@ import (
 )
 
 type User struct {
-	ID   int
-	Name string
-	Age  int `csv:",omitempty"`
-	City string
+	ID   int 	`csv:"id"`
+	Name string `csv:"name"`
+	Age  int 	`csv:",omitempty"`
+	City string	`csv:"city"`
 }
 
 func main() {
